@@ -10,10 +10,16 @@ export default class PubMap extends React.Component {
     this.state = {
       lat: null,
       lng: null,
+      // olat: null,
+      // olng: null
     };
     window.lineCoords = [];
     window.markers = [];
     window.checkpointsLoaded = false;
+
+    // edwin's attempt at players
+    // object of arrays where player name is the key and lineCoords is the value
+    window.players = {};
   }
 
   componentDidMount() {
@@ -29,15 +35,18 @@ export default class PubMap extends React.Component {
     // watch for location changes
     setInterval(() => {
       this.getCurrentLocation();
-    }, 3000);
+    // }, 3000);
+    }, 5000);
   }
 
   componentDidUpdate() {
     window.currentLocation = [this.state.lat, this.state.lng];
+    // console.log(window.currentUser);
     // when current location in state changes, redraw map with path
     pubnub.publish({
       channel: pnChannel, 
       message: {
+        player: window.currentUser,
         lat: this.state.lat,
         lng: this.state.lng, 
         markers: this.props.markers
@@ -47,6 +56,8 @@ export default class PubMap extends React.Component {
 
   renderMap() {
     let currLoc = {lat: this.state.lat, lng: this.state.lng};
+    // let currLoc1 = {lat: this.state.olat, lng: this.state.olng};
+
     lineCoords.push(new google.maps.LatLng(this.state.lat, this.state.lng));
     // save map to window to be able to redraw as current location changes
     window.map = new google.maps.Map(document.getElementById('map'), {
@@ -59,6 +70,12 @@ export default class PubMap extends React.Component {
       map: map
     });
     marker.setAnimation(google.maps.Animation.BOUNCE);
+
+    // marker1.setAnimation(google.maps.Animation.BOUNCE);
+    // window.marker1 = new google.maps.Marker({
+    //   position: currLoc1,
+    //   map: map
+    // });
 
   }
 
@@ -83,9 +100,18 @@ export default class PubMap extends React.Component {
   }
 
   redrawMap(payload) {
+    console.log('payload ', payload.message.player);
     console.log('updating current location marker');
     let lat = payload.message.lat;
     let lng = payload.message.lng;
+    let player = payload.message.player;
+
+    // if (player !== window.currentUser) {
+    //   this.setState({
+    //     olat: player.message.lat,
+    //     olng: player.message.lng
+    //   });
+    // }
 
     if (payload.message.markers && !window.checkpointsLoaded) {
       let markersArr = this.generateMarkersArray(payload.message.markers);
@@ -107,18 +133,68 @@ export default class PubMap extends React.Component {
     }
 
 
-    map.setCenter({lat: lat, lng: lng, alt: 0});
-    marker.setPosition({lat: lat, lng: lng, alt: 0});
+    // map.setCenter({lat: lat, lng: lng, alt: 0});
+    // marker.setPosition({lat: lat, lng: lng, alt: 0});
 
-    lineCoords.push(new google.maps.LatLng(lat, lng));
+    // if there's is a new player add it to the list and create a new marker.
+    if (window.players[player] === undefined) {
+      // add player to players obj and have value as the line coords array
+      window.players[player] = [];
+      // add a new marker called 'maker' + playername 
 
-    let lineCoordinatesPath = new google.maps.Polyline({
-      path: window.lineCoords,
-      geodesic: true,
-      strokeColor: '#2E10FF'
-    });
+      window.marker1 = new google.maps.Marker({
+        position: {lat: this.state.lat, lng: this.state.lng},
+        map: map
+      });
+      marker1.setAnimation(google.maps.Animation.BOUNCE);
+
+      // window.('marker'+ player) = new google.maps.Marker({
+      //   position: currLoc,
+      //   map: map
+      // });
+      // tempMarker.setAnimation(google.maps.Animation.BOUNCE);
+
+
+      // window.marker = new google.maps.Marker({
+      //   position: currLoc,
+      //   map: map
+      // });
+      // marker.setAnimation(google.maps.Animation.BOUNCE);
+
+
+    } 
+    (window.players[player]).push(new google.maps.LatLng(lat, lng));
+    console.log('tha players', players);
+
+    // old code
+    // lineCoords.push(new google.maps.LatLng(lat, lng));
+    let lineCoordinatesPath;
+    if (player === window.currentUser) {
+      map.setCenter({lat: lat, lng: lng, alt: 0});
+      marker.setPosition({lat: lat, lng: lng, alt: 0});
+      lineCoordinatesPath = new google.maps.Polyline({
+        // path: window.lineCoords,
+        path: window.players[player],
+        geodesic: true,
+        strokeColor: '#2E10FF'
+      });
+
+    } else {
+      marker1.setPosition({lat: lat, lng: lng, alt: 0});
+      // (marker+name).setPos
+      // marker.setPosition({lat: lat, lng: lng, alt: 0});
+      lineCoordinatesPath = new google.maps.Polyline({
+        // path: window.lineCoords,
+        path: window.players[player],
+        geodesic: true,
+        strokeColor: '#ff0000'
+      }); 
+    }
+
+
 
     lineCoordinatesPath.setMap(map);
+    // lineCoordinatesPath.setMap(map);
   }
 
   createMarker(location, order) {
@@ -167,11 +243,43 @@ export default class PubMap extends React.Component {
   pubnubConnect() {
     window.pnChannel = 'map-channel';
     window.pubnub = new PubNub({
-      publishKey: 'pub-c-1e471fcb-f49a-481a-84ae-32b4e950ffa8',
-      subscribeKey: 'sub-c-00a667ae-0a73-11e7-9734-02ee2ddab7fe'
+      // Han's key
+      publishKey: 'pub-c-dd6d2deb-fd96-42f8-a675-e81b9f52d69f',
+      subscribeKey: 'sub-c-b760f0c6-13ed-11e7-a9ec-0619f8945a4f'
+
+      // One that was there originally 
+      // publishKey: 'pub-c-1e471fcb-f49a-481a-84ae-32b4e950ffa8',
+      // subscribeKey: 'sub-c-00a667ae-0a73-11e7-9734-02ee2ddab7fe'
     });
-    pubnub.subscribe({channels: [pnChannel]});
     pubnub.addListener({message: this.redrawMap.bind(this)});
+  //   pubnub.addListener({
+  //   status: function(statusEvent) {
+  //     if (statusEvent.category === "PNConnectedCategory") {
+  //       // play();
+  //       // this.redrawMap.bind(this); // added this instead of play
+  //       this.renderMap();// added this
+
+  //     } else if (statusEvent.category === "PNUnknownCategory") {
+  //       var newState = {
+  //         new: 'error'
+  //       };
+  //       pubnub.setState(
+  //         {
+  //           state: newState 
+  //         },
+  //         function (status) {
+  //           console.log(statusEvent.errorData.message)
+  //         }
+  //       );
+  //     } 
+  //   },
+  //   message: function(message) {
+  //     checkGameStatus(message);
+  //     updateUI(message);
+  //   }
+  // });
+
+    pubnub.subscribe({channels: [pnChannel]});
   }
 
   render() {
