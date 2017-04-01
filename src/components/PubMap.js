@@ -12,7 +12,6 @@ export default class PubMap extends React.Component {
       lng: null,
       pic: null
     };
-    window.lineCoords = [];
     window.markers = [];
     window.checkpointsLoaded = false; 
     window.colorGenerator = function () {
@@ -31,8 +30,8 @@ export default class PubMap extends React.Component {
   }
 
   componentDidMount() {
-    this.pubnubConnect();
-
+    console.log('componentDidMount');
+    window.players = {};
     this.getCurrentLocation((ready) => {
       if (ready) {
         // one time map render on page ready
@@ -40,14 +39,18 @@ export default class PubMap extends React.Component {
       }
     });
 
+
+
+    this.pubnubConnect();
     // watch for location changes
     setInterval(() => {
       this.getCurrentLocation();
-    // }, 3000);
-    }, 5000);
+    }, 3000);
+    // }, 5000);
   }
 
   componentDidUpdate() {
+    // console.log('componentDidUpdate');
     window.currentLocation = [this.state.lat, this.state.lng];
     // console.log(window.currentLocation);    
     if (players[currentUser] !== undefined) {
@@ -57,13 +60,12 @@ export default class PubMap extends React.Component {
         console.log('players defined but no line coords');
       } else {
         console.log('party', players[currentUser].lineCoords.length);
-        // let lineCoordsArray = players[currentUser].lineCoords;
-        // console.log('current users last lined coords', lineCoordsArray[lineCoordsArray.length - 1]);
         console.log('currentLocation', currentLocation);
-        console.log('think this will fail but whyyyy', [lineCoordsArray[lineCoordsArray.length - 1].lat(), lineCoordsArray[lineCoordsArray.length - 1].lng()]);
+        console.log('previousLocation', [lineCoordsArray[lineCoordsArray.length - 1].lat(), lineCoordsArray[lineCoordsArray.length - 1].lng()]);
         // console.log('players in did mount', players[currentUser].lineCoords);// [players[currentUser].lineCoords.length-1]);//.lat["[[Scopes]]"]["0"].a );
       }
-      if ( Math.abs(this.state.lat - lineCoordsArray[lineCoordsArray.length - 1].lat()) > 0.00003 || Math.abs(this.state.lng - lineCoordsArray[lineCoordsArray.length - 1].lng()) > 0.000075 ) {
+      // if ( Math.abs(this.state.lat - lineCoordsArray[lineCoordsArray.length - 1].lat()) > 0.00003 || Math.abs(this.state.lng - lineCoordsArray[lineCoordsArray.length - 1].lng()) > 0.000075 ) {
+      if (true) {
         console.log('moving')
         pubnub.publish({
           channel: pnChannel, 
@@ -72,7 +74,8 @@ export default class PubMap extends React.Component {
             pic: window.currentUserPic,
             lat: this.state.lat,
             lng: this.state.lng, 
-            markers: this.props.markers
+            markers: this.props.markers,
+            race: 'greenfield'
           }
         });     
       } else {
@@ -89,9 +92,18 @@ export default class PubMap extends React.Component {
           pic: window.currentUserPic,
           lat: this.state.lat,
           lng: this.state.lng, 
-          markers: this.props.markers
+          markers: this.props.markers,
+          race: 'greenfield'
         }
       });
+      // console.log({
+      //     player: window.currentUser,
+      //     pic: window.currentUserPic,
+      //     lat: this.state.lat,
+      //     lng: this.state.lng, 
+      //     markers: this.props.markers,
+      //     race: 'greenfield'
+      //   });
     } 
     // .0001 lat or lng
     // when current location in state changes, redraw map with path
@@ -115,8 +127,8 @@ export default class PubMap extends React.Component {
 
   renderMap() {
     let currLoc = {lat: this.state.lat, lng: this.state.lng};
-
-    lineCoords.push(new google.maps.LatLng(this.state.lat, this.state.lng));
+    console.log('in render map', players);
+    // lineCoords.push(new google.maps.LatLng(this.state.lat, this.state.lng));
     // save map to window to be able to redraw as current location changes
     window.map = new google.maps.Map(document.getElementById('map'), {
       zoom: 15,
@@ -152,15 +164,16 @@ export default class PubMap extends React.Component {
   }
 
   redrawMap(payload) {
-    console.log('payload ', payload.message.player);
-    console.log('updating current location marker');
+    console.log('in redraw map. payload is from: ', payload.message.player);
     let lat = payload.message.lat;
     let lng = payload.message.lng;
     let player = payload.message.player;
     let pic = payload.message.pic;
 
-    if (payload.message.markers && !window.checkpointsLoaded) {
-      let markersArr = this.generateMarkersArray(payload.message.markers);
+    if (this.props.markers && !window.checkpointsLoaded) {
+    // if (payload.message.markers && !window.checkpointsLoaded) {
+      let markersArr = this.generateMarkersArray(this.props.markers);
+      // let markersArr = this.generateMarkersArray(payload.message.markers);
 
       // clear out old checkpoint markers first
       if (window.markers.length) {
@@ -206,6 +219,12 @@ export default class PubMap extends React.Component {
         geodesic: true,
         strokeColor: '#2E10FF'
       });
+      if (window.players[player].lineCoords.length === 10) {
+        console.log(10 + 'WHAT!!!!');
+        // this.props.saveRaceResults=34.56;
+        // this.props.saveRaceResults(34.55, players[player].lineCoords);
+        this.props.saveRaceResults(34.55, lineCoordinatesPath);
+      }
 
     } else {
       window.players[player].marker.setPosition({lat: lat, lng: lng, alt: 0});
@@ -217,7 +236,6 @@ export default class PubMap extends React.Component {
     }
 
     lineCoordinatesPath.setMap(map);
-    // lineCoordinatesPath.setMap(map);
   }
 
   createMarker(location, order) {
