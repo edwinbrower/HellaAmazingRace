@@ -22,7 +22,9 @@ export default class RunRace extends React.Component {
     // get users name for saving race results when page is loading.
     $.get('/username')
       .done((res) => {
+        // console.log('in RR', res);
         window.currentUser = res.displayName;
+        window.currentUserPic = res.photos[0].value;
       });
   }
 
@@ -47,6 +49,32 @@ export default class RunRace extends React.Component {
       }
     });
   }
+
+///////////////ADDED THIS
+  saveRaceResults(seconds, lineCoords) {
+    let formattedTime = {
+      min: Math.floor(seconds / 60).toString(),
+      sec: Math.floor(seconds % 60).toString(),
+      msec: (seconds % 1).toFixed(3).substring(2)
+    };
+    let raceResults = {
+      // title: this.props.raceTitle,
+      title: 'test',
+      winner: window.currentUser,
+      time: JSON.stringify(formattedTime),
+      path: JSON.stringify(lineCoords)
+    };
+
+    $.post('/saveRaceResults', raceResults)
+      .done((res) => {
+        console.log(res);
+      });
+  }
+/////////////////////////
+
+
+
+
 
   verifyLocation() {
     // if not running, start running race when checking start checkpoint location
@@ -95,14 +123,22 @@ export default class RunRace extends React.Component {
           <button type="button" className="btn btn-primary" onClick={this.loadRace.bind(this)}>Load Race</button>
         </form>
 
-        <Timer raceTitle={this.state.title} running={this.state.raceRunning} complete={this.state.raceComplete}/>
+        <Timer 
+          raceTitle={this.state.title} 
+          running={this.state.raceRunning} 
+          complete={this.state.raceComplete}
+          saveRaceResults={this.saveRaceResults.bind(this)}
+        />
 
         <div style={verifyBtnStyle}>
           <button type="button" className="btn btn-success btn-block" onClick={this.verifyLocation.bind(this)}>I Have Arrived at Current Checkpoint</button>
         </div>
 
 
-        <PubMap markers={this.state.markers}/>
+        <PubMap 
+          markers={this.state.markers}
+          saveRaceResults={this.saveRaceResults.bind(this)}
+        />
       </div>
     );
   }

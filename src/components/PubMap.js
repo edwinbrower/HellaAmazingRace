@@ -55,34 +55,30 @@ export default class PubMap extends React.Component {
     // console.log(window.currentLocation);    
     if (players[currentUser] !== undefined) {
       let lineCoordsArray = players[currentUser].lineCoords;
-
-      if (players[currentUser].lineCoords === undefined) {
-        console.log('players defined but no line coords');
-      } else {
-        console.log('party', players[currentUser].lineCoords.length);
-        console.log('currentLocation', currentLocation);
-        console.log('previousLocation', [lineCoordsArray[lineCoordsArray.length - 1].lat(), lineCoordsArray[lineCoordsArray.length - 1].lng()]);
-        // console.log('players in did mount', players[currentUser].lineCoords);// [players[currentUser].lineCoords.length-1]);//.lat["[[Scopes]]"]["0"].a );
-      }
+      // console.log('party', players[currentUser].lineCoords.length);
+      console.log('currentLocation', currentLocation);
+      console.log('previousLocation', [lineCoordsArray[lineCoordsArray.length - 1].lat(), lineCoordsArray[lineCoordsArray.length - 1].lng()]);
+      
+      // Geo stabilization - it has to move far enough but cannot error and go too far.
       // if ( Math.abs(this.state.lat - lineCoordsArray[lineCoordsArray.length - 1].lat()) > 0.00003 || Math.abs(this.state.lng - lineCoordsArray[lineCoordsArray.length - 1].lng()) > 0.000075 ) {
-      if (true) {
-        console.log('moving')
-        pubnub.publish({
-          channel: pnChannel, 
-          message: {
-            player: window.currentUser,
-            pic: window.currentUserPic,
-            lat: this.state.lat,
-            lng: this.state.lng, 
-            markers: this.props.markers,
-            race: 'greenfield'
-          }
-        });     
+      //   if (Math.abs(this.state.lat - lineCoordsArray[lineCoordsArray.length - 1].lat()) < 0.001 || Math.abs(this.state.lng - lineCoordsArray[lineCoordsArray.length - 1].lng()) < 0.001 ) {
+      if (true) { // this is for all the moves
+          console.log('moving')
+          pubnub.publish({
+            channel: pnChannel, 
+            message: {
+              player: window.currentUser,
+              pic: window.currentUserPic,
+              lat: this.state.lat,
+              lng: this.state.lng, 
+              markers: this.props.markers,
+              race: 'greenfield'
+            }
+          }); 
+        // }    
       } else {
         console.log('you did not move enough');
       }
-
-
     } else {
       console.log('players not yet defined', players);
       pubnub.publish({
@@ -96,33 +92,7 @@ export default class PubMap extends React.Component {
           race: 'greenfield'
         }
       });
-      // console.log({
-      //     player: window.currentUser,
-      //     pic: window.currentUserPic,
-      //     lat: this.state.lat,
-      //     lng: this.state.lng, 
-      //     markers: this.props.markers,
-      //     race: 'greenfield'
-      //   });
     } 
-    // .0001 lat or lng
-    // when current location in state changes, redraw map with path
-    // if (Math.abs(this.state.lat - ))
-
-    // let publish () => {
-    //   pubnub.publish({
-    //     channel: pnChannel, 
-    //     message: {
-    //       player: window.currentUser,
-    //       pic: window.currentUserPic,
-    //       lat: this.state.lat,
-    //       lng: this.state.lng, 
-    //       markers: this.props.markers
-    //     }
-    //   });
-    // }
-
-
   }
 
   renderMap() {
@@ -219,11 +189,25 @@ export default class PubMap extends React.Component {
         geodesic: true,
         strokeColor: '#2E10FF'
       });
-      if (window.players[player].lineCoords.length === 10) {
-        console.log(10 + 'WHAT!!!!');
+      // console.log('lcp', lineCoordinatesPath);
+      // console.log('lcp sm', lineCoordinatesPath.setMap);
+      // var myfunc = function(x){
+      //   console.log(x);
+      //   console.log('winning');
+      // } 
+      // function myfunc(x) {
+      //       console.log(x);
+      //       console.log('winning');
+      //     }
+
+      // function (c){try{this.set(a,b(c))}catch(d){_.qc(_.pc("set"+_.Jb(a),d))}}
+
+      // console.log('my func', myfunc);
+      if (window.players[player].lineCoords.length === 20) {
+        console.log(20 + 'WHAT!!!!');
         // this.props.saveRaceResults=34.56;
-        // this.props.saveRaceResults(34.55, players[player].lineCoords);
-        this.props.saveRaceResults(34.55, lineCoordinatesPath);
+        this.props.saveRaceResults(12.345, players[player].lineCoords);
+        // this.props.saveRaceResults(34.55, lineCoordinatesPath);
       }
 
     } else {
