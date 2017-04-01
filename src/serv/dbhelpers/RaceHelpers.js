@@ -38,7 +38,8 @@ exports.saveRaceResults = (req, res) => {
   let raceResults = new Results({
     title: req.body.title,
     winner: req.body.winner,
-    time: req.body.time
+    time: req.body.time,
+    path: req.body.path
   });
 
   raceResults.save((err, raceResults) => {
