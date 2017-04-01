@@ -41,10 +41,10 @@ if (process.env.NODE_ENV === 'production') {
 } else {  // local development facebook auth info (test app)
   console.log('>>in development environment');
   passport.use(new Strategy({
-    clientID: '634348233425883',
-    clientSecret: '63219faae4bd288de878264586212ac2',
+    clientID: '275892376188228',
+    clientSecret: '45566e5e9cfce7b50f84856983ea3247',
     callbackURL: 'http://localhost:3000/auth/facebook/callback',
-    profileFields: ['id', 'displayName', 'name', 'gender', 'picture.type(large)']
+    profileFields: ['id', 'displayName', 'name', 'gender', 'picture.type(small)']
   },
     function(accessToken, refreshToken, profile, cb) {
       return cb(null, profile);
@@ -87,7 +87,7 @@ app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { failureRedirect: '/' }),
   function(req, res) {
     // on successful login check user credentials and store in DB if not found yet.
-    UserHelpers.checkUserIfNewAndCreate(req.user.id, req.user.displayName)
+    UserHelpers.checkUserIfNewAndCreate(req.user.id, req.user.displayName, req.user.photos[0].value)
       .then(res.redirect('/home'))
       .catch((err) => {
         console.log(err);
