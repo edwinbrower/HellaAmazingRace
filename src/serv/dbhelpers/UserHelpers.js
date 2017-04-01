@@ -1,7 +1,7 @@
 import User from '../schemas/users';
 
 
-exports.checkUserIfNewAndCreate = (id, name) => {
+exports.checkUserIfNewAndCreate = (id, name, photo) => {
   return new Promise((resolve, reject) => {
     User.findOne({ userId: id, displayName: name })
       .exec((err, found) => {
@@ -10,7 +10,8 @@ exports.checkUserIfNewAndCreate = (id, name) => {
         } else if (!found) {
           var user = new User({
             userId: id,
-            displayName: name
+            displayName: name,
+            userPhoto: photo
           });
           user.save((err, newUser) => {
             err ? reject(err) : resolve('User Saved');
