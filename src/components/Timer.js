@@ -37,9 +37,9 @@ export default class Stopwatch extends React.Component {
     if (this.props.complete) {
       this.props.complete = false;
       this.toggle();
-      const seconds = this.state.timeElapsed / 1000;
-      this.saveRaceResults(seconds);
-
+      // const seconds = this.state.timeElapsed / 1000; // comment out next line and save to window
+      const seconds = 56.789;
+      this.saveTime(seconds);
     }
   }
 
