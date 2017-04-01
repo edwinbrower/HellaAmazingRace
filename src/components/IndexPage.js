@@ -23,7 +23,10 @@ export default class IndexPage extends React.Component {
     $.get('/username')
       .done((res) => {
         // allow all components access to current user name
+        // console.log('hi', res);
         window.currentUser = res.displayName;
+        // window.currentUserPic = res.photos[0].value;
+        // console.log('pic', currentUserPic);
         this.setState({
           displayName: res.displayName,
           userPhoto: res.photos[0].value
@@ -44,7 +47,7 @@ export default class IndexPage extends React.Component {
           <h4>
             Recent race results
           </h4>
-          <Table />
+          <Table currentUser={this.state.displayName}/>
         </div>
 
       </div>
